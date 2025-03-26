@@ -1,3 +1,89 @@
+// types.ts
+export interface Company {
+  id: string;
+}
+
+export interface Depot {
+  name: string;
+  usecase: string;
+  status: string;
+}
+
+export interface Office {
+  name: string;
+}
+
+export interface Perk {
+  'perk-name': string;
+}
+
+export interface ApiError {
+  message: string;
+}
+
+// api-service.ts
+import { Company, Depot, Office, Perk, ApiError } from './types';
+
+const BASE_URL = 'http://localhost:8000';
+
+export class ApiService {
+  private static async fetchData<T>(
+    url: string, 
+    errorMessage: string
+  ): Promise<T> {
+    try {
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorBody = await response.text();
+        throw new Error(`${errorMessage}. Status: ${response.status}. Details: ${errorBody}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error(`Error in API call: ${errorMessage}`, error);
+      throw error;
+    }
+  }
+
+  static async fetchCompanyOptions(): Promise<Company[]> {
+    return this.fetchData<Company[]>(
+      `${BASE_URL}/company`, 
+      'Failed to fetch Company options'
+    );
+  }
+
+  static async fetchDepots(companyId: string): Promise<Depot[]> {
+    return this.fetchData<Depot[]>(
+      `${BASE_URL}/company/${companyId}/depots`, 
+      `Failed to fetch depots for Company: ${companyId}`
+    );
+  }
+
+  static async fetchOffices(
+    companyId: string, 
+    depotName: string
+  ): Promise<Office[]> {
+    return this.fetchData<Office[]>(
+      `${BASE_URL}/company/${companyId}/depots/${encodeURIComponent(depotName)}/offices`, 
+      `Failed to fetch offices for Company: ${companyId}, Depot: ${depotName}`
+    );
+  }
+
+  static async fetchPerks(
+    companyId: string, 
+    depotName: string, 
+    officeName: string
+  ): Promise<Perk[]> {
+    return this.fetchData<Perk[]>(
+      `${BASE_URL}/company/${companyId}/depots/${encodeURIComponent(depotName)}/offices/${officeName}/perks`, 
+      `Failed to fetch perks for Company: ${companyId}, Depot: ${depotName}, Office: ${officeName}`
+    );
+  }
+}
+
+
+
 import React, { useState, useEffect } from 'react';
 import { ApiService } from './api-service';
 import { Company, Depot, Office, Perk } from './types';
