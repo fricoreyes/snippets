@@ -1,0 +1,266 @@
+import React, { useState, useEffect } from 'react';
+import { ApiService } from './api-service';
+import { Company, Depot, Office, Perk } from './types';
+
+const DynamicCompanySelector: React.FC = () => {
+  // State for options
+  const [companyOptions, setCompanyOptions] = useState<Company[]>([]);
+  const [availableDepots, setAvailableDepots] = useState<Depot[]>([]);
+  const [availableOffices, setAvailableOffices] = useState<Office[]>([]);
+  const [availablePerks, setAvailablePerks] = useState<Perk[]>([]);
+
+  // State for selections
+  const [selectedCompany, setSelectedCompany] = useState<string>('');
+  const [selectedDepot, setSelectedDepot] = useState<string>('');
+  const [selectedOffice, setSelectedOffice] = useState<string>('');
+  const [selectedPerk, setSelectedPerk] = useState<string>('');
+
+  // State for loading and error handling
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch Company options on component mount
+  useEffect(() => {
+    const fetchCompanyOptions = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await ApiService.fetchCompanyOptions();
+        setCompanyOptions(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch Company options');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCompanyOptions();
+  }, []);
+
+  // Fetch depots when Company is selected
+  const handleCompanyChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const companyId = event.target.value;
+    setSelectedCompany(companyId);
+    
+    // Reset subsequent selections
+    setSelectedDepot('');
+    setSelectedOffice('');
+    setSelectedPerk('');
+    setAvailableOffices([]);
+    setAvailablePerks([]);
+
+    // Fetch depots for selected Company
+    if (companyId) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await ApiService.fetchDepots(companyId);
+        setAvailableDepots(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch depots');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setAvailableDepots([]);
+    }
+  };
+
+  // Fetch offices when depot is selected
+  const handleDepotChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const depotName = event.target.value;
+    setSelectedDepot(depotName);
+    
+    // Reset subsequent selections
+    setSelectedOffice('');
+    setSelectedPerk('');
+    setAvailablePerks([]);
+
+    // Fetch offices for selected depot
+    if (depotName) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await ApiService.fetchOffices(selectedCompany, depotName);
+        setAvailableOffices(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch offices');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setAvailableOffices([]);
+    }
+  };
+
+  // Fetch perks when office is selected
+  const handleOfficeChange = async (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const officeName = event.target.value;
+    setSelectedOffice(officeName);
+    
+    // Reset perk selection
+    setSelectedPerk('');
+
+    // Fetch perks for selected office
+    if (officeName) {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const data = await ApiService.fetchPerks(selectedCompany, selectedDepot, officeName);
+        setAvailablePerks(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch perks');
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      setAvailablePerks([]);
+    }
+  };
+
+  // Handle perk selection
+  const handlePerkChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedPerk(event.target.value);
+  };
+
+  return (
+    <div className="p-4 max-w-md mx-auto">
+      {/* Error Handling */}
+      {error && (
+        <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
+          {error}
+        </div>
+      )}
+
+      {/* Company Select */}
+      <div className="mb-4">
+        <label 
+          htmlFor="company-select" 
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
+          Select Company
+        </label>
+        <select
+          id="company-select"
+          value={selectedCompany}
+          onChange={handleCompanyChange}
+          disabled={isLoading}
+          className={`w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            isLoading ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <option value="">Select a Company</option>
+          {companyOptions.map((company) => (
+            <option key={company.id} value={company.id}>
+              {company.id}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Depot Select */}
+      <div className="mb-4">
+        <label 
+          htmlFor="depot-select" 
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
+          Select Depot
+        </label>
+        <select
+          id="depot-select"
+          value={selectedDepot}
+          onChange={handleDepotChange}
+          disabled={!selectedCompany || isLoading}
+          className={`w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            (!selectedCompany || isLoading) ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <option value="">
+            {selectedCompany ? 'Select a Depot' : 'Select Company first'}
+          </option>
+          {availableDepots.map((depot) => (
+            <option key={depot.name} value={depot.name}>
+              {depot.name} - {depot.usecase}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Office Select */}
+      <div className="mb-4">
+        <label 
+          htmlFor="office-select" 
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
+          Select Office
+        </label>
+        <select
+          id="office-select"
+          value={selectedOffice}
+          onChange={handleOfficeChange}
+          disabled={!selectedDepot || isLoading}
+          className={`w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            (!selectedDepot || isLoading) ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <option value="">
+            {selectedDepot ? 'Select an Office' : 'Select Depot first'}
+          </option>
+          {availableOffices.map((office) => (
+            <option key={office.name} value={office.name}>
+              {office.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Perk Select */}
+      <div className="mb-4">
+        <label 
+          htmlFor="perk-select" 
+          className="block text-sm font-medium text-gray-700 mb-2"
+        >
+          Select Perk
+        </label>
+        <select
+          id="perk-select"
+          value={selectedPerk}
+          onChange={handlePerkChange}
+          disabled={!selectedOffice || isLoading}
+          className={`w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            (!selectedOffice || isLoading) ? 'opacity-50 cursor-not-allowed' : ''
+          }`}
+        >
+          <option value="">
+            {selectedOffice ? 'Select a Perk' : 'Select Office first'}
+          </option>
+          {availablePerks.map((perk) => (
+            <option key={perk['perk-name']} value={perk['perk-name']}>
+              {perk['perk-name']}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Loading Indicator */}
+      {isLoading && (
+        <div className="flex justify-center items-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-blue-500"></div>
+        </div>
+      )}
+
+      {/* Selected Details */}
+      {selectedPerk && (
+        <div className="mt-4 p-3 bg-gray-100 rounded-md">
+          <h3 className="font-semibold mb-2">Selected Details:</h3>
+          <p><strong>Company:</strong> {selectedCompany}</p>
+          <p><strong>Depot:</strong> {selectedDepot}</p>
+          <p><strong>Office:</strong> {selectedOffice}</p>
+          <p><strong>Perk:</strong> {selectedPerk}</p>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DynamicCompanySelector;
