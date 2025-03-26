@@ -1,0 +1,156 @@
+import React, { useState, useEffect } from 'react';
+import { CategoriesService, CategoryOption, SubcategoryOption } from './categories-service';
+
+const DependentSelects: React.FC = () => {
+  // State for first select (categories)
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryOption | null>(null);
+  
+  // State for second select (subcategories)
+  const [subcategories, setSubcategories] = useState<SubcategoryOption[]>([]);
+  const [selectedSubcategory, setSelectedSubcategory] = useState<SubcategoryOption | null>(null);
+  
+  // Loading and error states
+  const [isLoadingCategories, setIsLoadingCategories] = useState(true);
+  const [isLoadingSubcategories, setIsLoadingSubcategories] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Fetch categories on component mount
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        setIsLoadingCategories(true);
+        const fetchedCategories = await CategoriesService.fetchCategories();
+        setCategories(fetchedCategories);
+        setIsLoadingCategories(false);
+      } catch (err) {
+        setError('Failed to fetch categories');
+        setIsLoadingCategories(false);
+      }
+    };
+
+    loadCategories();
+  }, []);
+
+  // Fetch subcategories when a category is selected
+  useEffect(() => {
+    const loadSubcategories = async () => {
+      // Only fetch if a category is selected and it has subcategories
+      if (selectedCategory && selectedCategory.hasSubcategories) {
+        try {
+          setIsLoadingSubcategories(true);
+          setSelectedSubcategory(null);
+          const fetchedSubcategories = await CategoriesService.fetchSubcategories(selectedCategory.id);
+          setSubcategories(fetchedSubcategories);
+          setIsLoadingSubcategories(false);
+        } catch (err) {
+          setError('Failed to fetch subcategories');
+          setIsLoadingSubcategories(false);
+        }
+      } else {
+        // Clear subcategories if selected category doesn't have subcategories
+        setSubcategories([]);
+        setSelectedSubcategory(null);
+      }
+    };
+
+    loadSubcategories();
+  }, [selectedCategory]);
+
+  // Handle category selection
+  const handleCategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const categoryId = event.target.value;
+    const selected = categories.find(category => String(category.id) === categoryId);
+    
+    if (selected) {
+      setSelectedCategory(selected);
+      // Reset subcategory when category changes
+      setSelectedSubcategory(null);
+    }
+  };
+
+  // Handle subcategory selection
+  const handleSubcategoryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const subcategoryId = event.target.value;
+    const selected = subcategories.find(subcategory => String(subcategory.id) === subcategoryId);
+    
+    if (selected) {
+      setSelectedSubcategory(selected);
+    }
+  };
+
+  return (
+    <div className="dependent-selects-container">
+      {/* First Select - Categories */}
+      <div className="category-select">
+        <label htmlFor="category-select">Select Category</label>
+        <select 
+          id="category-select"
+          value={selectedCategory ? String(selectedCategory.id) : ''}
+          onChange={handleCategoryChange}
+          disabled={isLoadingCategories}
+        >
+          <option value="" disabled>
+            {isLoadingCategories ? 'Loading categories...' : 'Select a category'}
+          </option>
+          {categories.map((category) => (
+            <option 
+              key={category.id} 
+              value={String(category.id)}
+            >
+              {category.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Second Select - Subcategories */}
+      {selectedCategory && selectedCategory.hasSubcategories && (
+        <div className="subcategory-select">
+          <label htmlFor="subcategory-select">Select Subcategory</label>
+          <select 
+            id="subcategory-select"
+            value={selectedSubcategory ? String(selectedSubcategory.id) : ''}
+            onChange={handleSubcategoryChange}
+            disabled={isLoadingSubcategories || subcategories.length === 0}
+          >
+            <option value="" disabled>
+              {isLoadingSubcategories 
+                ? 'Loading subcategories...' 
+                : subcategories.length === 0 
+                  ? 'No subcategories available' 
+                  : 'Select a subcategory'}
+            </option>
+            {subcategories.map((subcategory) => (
+              <option 
+                key={subcategory.id} 
+                value={String(subcategory.id)}
+              >
+                {subcategory.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {/* Display selected values */}
+      <div className="selected-values">
+        {selectedCategory && (
+          <p>Selected Category: {selectedCategory.name}</p>
+        )}
+        {selectedSubcategory && (
+          <p>Selected Subcategory: {selectedSubcategory.name}</p>
+        )}
+      </div>
+
+      {/* Error handling */}
+      {error && (
+        <div className="error-message" style={{ color: 'red' }}>
+          {error}
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default DependentSelects;
