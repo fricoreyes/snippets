@@ -1,3 +1,49 @@
+import axios from 'axios';
+
+// Base URL
+const BASE_URL = 'http://localhost:9000';
+
+// Interfaces for type safety
+export interface BaseOption {
+  id: number | string;
+  name: string;
+}
+
+export interface CategoryOption extends BaseOption {
+  hasSubcategories?: boolean;
+}
+
+export interface SubcategoryOption extends BaseOption {
+  categoryId: number | string;
+}
+
+// Categories Service
+export const CategoriesService = {
+  // Fetch all categories
+  async fetchCategories(): Promise<CategoryOption[]> {
+    try {
+      const response = await axios.get<CategoryOption[]>(`${BASE_URL}/api/categories`);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching categories:', error);
+      throw error;
+    }
+  },
+
+  // Fetch subcategories for a specific category
+  async fetchSubcategories(categoryId: number | string): Promise<SubcategoryOption[]> {
+    try {
+      const response = await axios.get<SubcategoryOption[]>(`${BASE_URL}/api/subcategories`, {
+        params: { categoryId }
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching subcategories:', error);
+      throw error;
+    }
+  }
+};
+
 import React, { useState, useEffect } from 'react';
 import { CategoriesService, CategoryOption, SubcategoryOption } from './categories-service';
 
