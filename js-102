@@ -1,0 +1,87 @@
+/**
+ * Extracts unique tuples of company_name, company_industry, and company_hq_state from company data
+ * Using TypeScript syntax but with minimal type definitions
+ * 
+ * @param companyData - Array of flattened company objects
+ * @returns Array of unique tuples [company_name, company_industry, company_hq_state]
+ */
+function getUniqueCompanyTuples(companyData: any[]): any[] {
+  // Set to track unique tuples (using string representation for comparison)
+  const uniqueTuplesSet = new Set<string>();
+  
+  // Array to store the actual tuples
+  const uniqueTuples: any[] = [];
+  
+  // Process each company
+  companyData.forEach((company) => {
+    // Create the tuple with only the three properties we care about
+    const tuple = [
+      company.company_name,
+      company.company_industry,
+      company.company_hq_state
+    ];
+    
+    // Create a string representation for set checking
+    const tupleString = JSON.stringify(tuple);
+    
+    // Only add unique tuples
+    if (!uniqueTuplesSet.has(tupleString)) {
+      uniqueTuplesSet.add(tupleString);
+      uniqueTuples.push(tuple);
+    }
+  });
+  
+  return uniqueTuples;
+}
+
+// Example usage with sample data
+function demoWithSampleData(): void {
+  const sampleData = [
+    {
+      "company_id": "C001",
+      "company_name": "TechInnovate Solutions",
+      "company_industry": "Software Development",
+      "company_hq_state": "CA"
+      // Other properties omitted for brevity
+    },
+    {
+      "company_id": "C002",
+      "company_name": "GreenEarth Manufacturing",
+      "company_industry": "Sustainable Manufacturing",
+      "company_hq_state": "MI"
+      // Other properties omitted for brevity
+    },
+    {
+      "company_id": "C005",
+      "company_name": "Global Logistics Partners",
+      "company_industry": "Transportation & Logistics",
+      "company_hq_state": null
+      // Other properties omitted for brevity
+    },
+    // Duplicate for demonstration (same name, industry, state as C001)
+    {
+      "company_id": "C006",
+      "company_name": "TechInnovate Solutions",
+      "company_industry": "Software Development",
+      "company_hq_state": "CA"
+      // Other properties omitted for brevity
+    }
+  ];
+  
+  const uniqueTuples = getUniqueCompanyTuples(sampleData);
+  console.log(uniqueTuples);
+  // Expected output:
+  // [
+  //   ["TechInnovate Solutions", "Software Development", "CA"],
+  //   ["GreenEarth Manufacturing", "Sustainable Manufacturing", "MI"],
+  //   ["Global Logistics Partners", "Transportation & Logistics", null]
+  // ]
+}
+
+// Usage example
+// demoWithSampleData();
+
+// For integration with the full dataset:
+// const companyData = [...]; // Your flattened company data
+// const uniqueTuples = getUniqueCompanyTuples(companyData);
+// console.log(uniqueTuples);
