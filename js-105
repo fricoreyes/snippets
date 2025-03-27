@@ -1,0 +1,166 @@
+import axios from 'axios';
+
+/**
+ * Extracts unique tuples of company_name, company_industry, and company_hq_state from company data
+ * 
+ * @param companyData - Array of flattened company objects
+ * @returns Array of unique tuples [company_name, company_industry, company_hq_state]
+ */
+export const getUniqueCompanyTuples = (companyData: any[]): any[] => {
+  const uniqueTuplesSet = new Set<string>();
+  const uniqueTuples: any[] = [];
+  
+  companyData.forEach((company) => {
+    const tuple = [
+      company.company_name,
+      company.company_industry,
+      company.company_hq_state
+    ];
+    
+    const tupleString = JSON.stringify(tuple);
+    
+    if (!uniqueTuplesSet.has(tupleString)) {
+      uniqueTuplesSet.add(tupleString);
+      uniqueTuples.push(tuple);
+    }
+  });
+  
+  return uniqueTuples;
+};
+
+/**
+ * Makes an axios GET request to the company endpoint for a single tuple
+ * 
+ * @param tuple - Array containing [company_name, company_industry, company_hq_state]
+ * @returns Promise with the axios response
+ */
+export const makeCompanyRequest = async (tuple: any[]): Promise<any> => {
+  const [companyName, companyIndustry, companyState] = tuple;
+  
+  // Handle null state value
+  const stateParam = companyState === null ? 'null' : companyState;
+  
+  // URL encode the parameters to handle special characters
+  const encodedName = encodeURIComponent(companyName);
+  const encodedIndustry = encodeURIComponent(companyIndustry);
+  const encodedState = encodeURIComponent(stateParam);
+  
+  const url = `http://localhost:9000/comp/${encodedName}/indus/${encodedIndustry}/state/${encodedState}`;
+  
+  try {
+    const response = await axios.get(url);
+    return {
+      tuple,
+      success: true,
+      data: response.data,
+      status: response.status
+    };
+  } catch (error) {
+    // Handle error but don't throw to prevent stopping all requests
+    return {
+      tuple,
+      success: false,
+      error: error,
+      status: error.response?.status || 'unknown'
+    };
+  }
+};
+
+/**
+ * Makes axios GET requests for all unique company tuples
+ * 
+ * @param companyData - Array of flattened company objects
+ * @returns Promise with array of results from all requests
+ */
+export const requestAllCompanyData = async (companyData: any[]): Promise<any[]> => {
+  // Get unique tuples
+  const uniqueTuples = getUniqueCompanyTuples(companyData);
+  
+  console.log(`Making ${uniqueTuples.length} unique API calls...`);
+  
+  // Make all requests (in parallel)
+  const requests = uniqueTuples.map(tuple => makeCompanyRequest(tuple));
+  const results = await Promise.all(requests);
+  
+  // Log summary
+  const successful = results.filter(result => result.success).length;
+  console.log(`Completed ${successful} successful requests out of ${results.length} total.`);
+  
+  return results;
+};
+
+/**
+ * Makes axios GET requests for all unique company tuples (sequential version)
+ * Use this if you need to limit concurrency or need ordered processing
+ * 
+ * @param companyData - Array of flattened company objects
+ * @returns Promise with array of results from all requests
+ */
+export const requestAllCompanyDataSequential = async (companyData: any[]): Promise<any[]> => {
+  // Get unique tuples
+  const uniqueTuples = getUniqueCompanyTuples(companyData);
+  
+  console.log(`Making ${uniqueTuples.length} unique API calls sequentially...`);
+  
+  const results = [];
+  
+  // Process requests one at a time
+  for (const tuple of uniqueTuples) {
+    const result = await makeCompanyRequest(tuple);
+    results.push(result);
+    
+    // Optional delay between requests if needed
+    // await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  // Log summary
+  const successful = results.filter(result => result.success).length;
+  console.log(`Completed ${successful} successful requests out of ${results.length} total.`);
+  
+  return results;
+};
+
+// Example usage
+const runExample = async () => {
+  const sampleData = [
+    {
+      "company_id": "C001",
+      "company_name": "TechInnovate Solutions",
+      "company_industry": "Software Development",
+      "company_hq_state": "CA"
+    },
+    {
+      "company_id": "C002",
+      "company_name": "GreenEarth Manufacturing",
+      "company_industry": "Sustainable Manufacturing",
+      "company_hq_state": "MI"
+    },
+    {
+      "company_id": "C005",
+      "company_name": "Global Logistics Partners",
+      "company_industry": "Transportation & Logistics",
+      "company_hq_state": null
+    }
+  ];
+  
+  // Choose either parallel or sequential execution
+  const results = await requestAllCompanyData(sampleData);
+  // const results = await requestAllCompanyDataSequential(sampleData);
+  
+  console.log("API call results:", results);
+  
+  // Process successful results if needed
+  const successfulData = results
+    .filter(result => result.success)
+    .map(result => result.data);
+  
+  console.log("Successful data:", successfulData);
+};
+
+// Run the example
+// runExample().catch(console.error);
+
+// For actual usage in a module:
+// export const fetchCompanyData = async (companyData) => {
+//   return await requestAllCompanyData(companyData);
+// };
