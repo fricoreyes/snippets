@@ -1,0 +1,121 @@
+/**
+ * Extracts unique tuples of company_name, company_industry, and company_hq_state from company data
+ * 
+ * @param {Array} companyData - Array of company objects
+ * @returns {Array} Array of unique tuples [company_name, company_industry, company_hq_state]
+ */
+function getUniqueCompanyTuples(companyData) {
+  // Set to track unique tuples (using string representation for comparison)
+  const uniqueTuplesSet = new Set();
+  
+  // Array to store the actual tuples
+  const uniqueTuples = [];
+  
+  // Process each company
+  companyData.forEach(company => {
+    // Create the tuple
+    const tuple = [
+      company.company_name,
+      company.company_industry,
+      company.company_hq_state
+    ];
+    
+    // Create a string representation for set checking
+    const tupleString = JSON.stringify(tuple);
+    
+    // Only add unique tuples
+    if (!uniqueTuplesSet.has(tupleString)) {
+      uniqueTuplesSet.add(tupleString);
+      uniqueTuples.push(tuple);
+    }
+  });
+  
+  return uniqueTuples;
+}
+
+// Example usage:
+// const companyData = [... your flattened company JSON ...];
+// const uniqueTuples = getUniqueCompanyTuples(companyData);
+// console.log(uniqueTuples);
+
+// Example with sample data
+function demoWithSampleData() {
+  const sampleData = [
+    {
+      "company_id": "C001",
+      "company_name": "TechInnovate Solutions",
+      "company_industry": "Software Development",
+      "company_hq_state": "CA"
+    },
+    {
+      "company_id": "C002",
+      "company_name": "GreenEarth Manufacturing",
+      "company_industry": "Sustainable Manufacturing",
+      "company_hq_state": "MI"
+    },
+    {
+      "company_id": "C003",
+      "company_name": "FinSecure Banking",
+      "company_industry": "Financial Services",
+      "company_hq_state": "NY"
+    },
+    {
+      "company_id": "C004",
+      "company_name": "Global Logistics Partners",
+      "company_industry": "Transportation & Logistics",
+      "company_hq_state": null
+    },
+    // Duplicate for demonstration (same name, industry, state as C001)
+    {
+      "company_id": "C005",
+      "company_name": "TechInnovate Solutions",
+      "company_industry": "Software Development",
+      "company_hq_state": "CA"
+    }
+  ];
+  
+  const uniqueTuples = getUniqueCompanyTuples(sampleData);
+  console.log(uniqueTuples);
+  // Expected output:
+  // [
+  //   ["TechInnovate Solutions", "Software Development", "CA"],
+  //   ["GreenEarth Manufacturing", "Sustainable Manufacturing", "MI"],
+  //   ["FinSecure Banking", "Financial Services", "NY"],
+  //   ["Global Logistics Partners", "Transportation & Logistics", null]
+  // ]
+}
+
+// For Python users, here's an equivalent Python function:
+/*
+def get_unique_company_tuples(company_data):
+    """
+    Extracts unique tuples of company_name, company_industry, and company_hq_state from company data
+    
+    Args:
+        company_data (list): List of company dictionaries
+        
+    Returns:
+        list: List of unique tuples (company_name, company_industry, company_hq_state)
+    """
+    # Set to track unique tuples
+    unique_tuples_set = set()
+    
+    # List to store the actual tuples
+    unique_tuples = []
+    
+    # Process each company
+    for company in company_data:
+        # Create the tuple
+        tuple_data = (
+            company['company_name'],
+            company['company_industry'],
+            company['company_hq_state']
+        )
+        
+        # Only add unique tuples
+        if tuple_data not in unique_tuples_set:
+            unique_tuples_set.add(tuple_data)
+            unique_tuples.append(tuple_data)
+    
+    return unique_tuples
+*/
