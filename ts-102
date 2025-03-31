@@ -1,0 +1,61 @@
+interface Employee {
+    name: string;
+    age: number;
+    address?: string;
+    phoneNumber?: string;
+    emailAddress?: string;
+    // Add other properties as needed
+}
+
+function getPropertiesStartingWith(searchKey: string, employee: Employee): { [key: string]: any } {
+    const result: { [key: string]: any } = {};
+
+    for (const key in employee) {
+        if (employee.hasOwnProperty(key) && key.startsWith(searchKey)) {
+            result[key] = employee[key as keyof Employee];
+        }
+    }
+
+    return result;
+}
+
+// Example usage:
+const exampleEmployee: Employee = {
+    name: "Alice",
+    age: 30,
+    address: "123 Main St",
+    phoneNumber: "555-1234",
+    emailAddress: "alice@example.com"
+};
+
+const searchKey = "address";
+const filteredProperties = getPropertiesStartingWith(searchKey, exampleEmployee);
+console.log(filteredProperties);
+// Output: { address: "123 Main St", emailAddress: "alice@example.com" }
+
+
+function getPropertiesStartingWith(searchKey: string, obj: object): object {
+    const result: { [key: string]: any } = {};
+
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key) && key.startsWith(searchKey)) {
+            result[key] = (obj as any)[key];
+        }
+    }
+
+    return result;
+}
+
+// Example usage:
+const exampleObject = {
+    name: "Alice",
+    age: 30,
+    address: "123 Main St",
+    phoneNumber: "555-1234",
+    emailAddress: "alice@example.com"
+};
+
+const searchKey = "address";
+const filteredProperties = getPropertiesStartingWith(searchKey, exampleObject);
+console.log(filteredProperties);
+// Output: { address: "123 Main St", emailAddress: "alice@example.com" }
