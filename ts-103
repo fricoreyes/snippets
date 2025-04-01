@@ -1,0 +1,16 @@
+interface Employee {
+  id: number;
+  name: string;
+  position: string;
+  // Add other properties as needed
+}
+
+function removeDuplicates(employees: Employee[]): Employee[] {
+  const uniqueEmployees = new Map<number, Employee>();
+
+  employees.forEach(employee => {
+    uniqueEmployees.set(employee.id, employee);
+  });
+
+  return Array.from(uniqueEmployees.values());
+}
