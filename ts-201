@@ -4,7 +4,7 @@ interface Employee {
   lastname: string;
   department: string;
   task: string;
-  manager: string;
+  manager?: string; // Manager is now optional
 }
 
 /**
@@ -21,13 +21,13 @@ function getUniqueValuesByManager<K extends keyof Omit<Employee, 'manager'>>(
   
   // Group values by manager
   employees.forEach(employee => {
-    const { manager } = employee;
+    const managerName = employee.manager || 'Unassigned'; // Use 'Unassigned' for employees without managers
     
-    if (!result[manager]) {
-      result[manager] = new Set<Employee[K]>();
+    if (!result[managerName]) {
+      result[managerName] = new Set<Employee[K]>();
     }
     
-    result[manager].add(employee[property]);
+    result[managerName].add(employee[property]);
   });
   
   // Convert Sets to arrays
@@ -47,7 +47,9 @@ const employees: Employee[] = [
   { name: 'Bob', lastname: 'Johnson', department: 'Marketing', task: 'Campaigns', manager: 'Charlie' },
   { name: 'Sarah', lastname: 'Williams', department: 'Engineering', task: 'Coding', manager: 'Alice' },
   { name: 'Mike', lastname: 'Brown', department: 'Marketing', task: 'Social Media', manager: 'Charlie' },
-  { name: 'Emily', lastname: 'Davis', department: 'HR', task: 'Recruiting', manager: 'David' }
+  { name: 'Emily', lastname: 'Davis', department: 'HR', task: 'Recruiting', manager: 'David' },
+  { name: 'Tom', lastname: 'Wilson', department: 'Freelance', task: 'Design' }, // No manager assigned
+  { name: 'Lisa', lastname: 'Garcia', department: 'Freelance', task: 'Content Creation' } // No manager assigned
 ];
 
 // Get unique departments by manager
