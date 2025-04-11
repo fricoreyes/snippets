@@ -1,0 +1,29 @@
+interface Employee {
+    name: string;
+    lastname: string;
+    department: string;
+    task: string;
+    manager: string;
+}
+
+function groupByManager(employees: Employee[]): { [manager: string]: Employee[] } {
+    return employees.reduce((groupedEmployees, employee) => {
+        const manager = employee.manager;
+        if (!groupedEmployees[manager]) {
+            groupedEmployees[manager] = [];
+        }
+        groupedEmployees[manager].push(employee);
+        return groupedEmployees;
+    }, {} as { [manager: string]: Employee[] });
+}
+
+// Example usage:
+const employees: Employee[] = [
+    { name: 'John', lastname: 'Doe', department: 'HR', task: 'Recruitment', manager: 'Alice' },
+    { name: 'Jane', lastname: 'Smith', department: 'IT', task: 'Development', manager: 'Bob' },
+    { name: 'Mike', lastname: 'Johnson', department: 'HR', task: 'Training', manager: 'Alice' },
+    { name: 'Emily', lastname: 'Davis', department: 'IT', task: 'Testing', manager: 'Bob' }
+];
+
+const groupedEmployees = groupByManager(employees);
+console.log(groupedEmployees);
