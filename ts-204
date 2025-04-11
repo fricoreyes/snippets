@@ -1,0 +1,45 @@
+interface Employee {
+    name: string;
+    lastName: string;
+    department: string;
+    task: string;
+    manager?: string; // Manager is optional
+}
+
+function deduplicateEmployeesByManager(employees: Employee[]): Employee[] {
+    const seenManagers = new Set<string>();
+    const result: Employee[] = [];
+
+    employees.forEach(employee => {
+        if (employee.manager) {
+            if (!seenManagers.has(employee.manager)) {
+                seenManagers.add(employee.manager);
+                result.push(employee);
+            }
+        } else {
+            result.push(employee);
+        }
+    });
+
+    return result;
+}
+
+// Example usage:
+const employees: Employee[] = [
+    { name: 'John', lastName: 'Doe', department: 'HR', task: 'Recruitment', manager: 'Alice' },
+    { name: 'Chris', lastName: 'Evans', department: 'Marketing', task: 'Advertising' }, // No manager
+    { name: 'Jane', lastName: 'Smith', department: 'IT', task: 'Development', manager: 'Bob' },
+    { name: 'Emily', lastName: 'Davis', department: 'HR', task: 'Training', manager: 'Bob' },
+    { name: 'Sara', lastName: 'Lee', department: 'Sales', task: 'Customer Support' }, // No manager
+    { name: 'Mike', lastName: 'Johnson', department: 'Finance', task: 'Accounting', manager: 'Alice' }
+];
+
+const deduplicatedEmployees = deduplicateEmployeesByManager(employees);
+console.log(deduplicatedEmployees);
+// Output:
+// [
+//   { name: 'John', lastName: 'Doe', department: 'HR', task: 'Recruitment', manager: 'Alice' },
+//   { name: 'Chris', lastName: 'Evans', department: 'Marketing', task: 'Advertising' }, // No manager
+//   { name: 'Jane', lastName: 'Smith', department: 'IT', task: 'Development', manager: 'Bob' },
+//   { name: 'Sara', lastName: 'Lee', department: 'Sales', task: 'Customer Support' }, // No manager
+// ]
