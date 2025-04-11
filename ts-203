@@ -1,0 +1,31 @@
+interface Employee {
+    name: string;
+    lastName: string;
+    department: string;
+    task: string;
+    manager?: string; // Manager is now optional
+}
+
+function deduplicateEmployeesByManager(employees: Employee[]): Employee[] {
+    const managerMap = new Map<string | undefined, Employee>();
+
+    employees.forEach(employee => {
+        if (!managerMap.has(employee.manager)) {
+            managerMap.set(employee.manager, employee);
+        }
+    });
+
+    return Array.from(managerMap.values());
+}
+
+// Example usage:
+const employees: Employee[] = [
+    { name: 'John', lastName: 'Doe', department: 'HR', task: 'Recruitment', manager: 'Alice' },
+    { name: 'Jane', lastName: 'Smith', department: 'IT', task: 'Development', manager: 'Bob' },
+    { name: 'Mike', lastName: 'Johnson', department: 'Finance', task: 'Accounting', manager: 'Alice' },
+    { name: 'Emily', lastName: 'Davis', department: 'HR', task: 'Training', manager: 'Bob' },
+    { name: 'Chris', lastName: 'Evans', department: 'Marketing', task: 'Advertising' } // No manager
+];
+
+const deduplicatedEmployees = deduplicateEmployeesByManager(employees);
+console.log(deduplicatedEmployees);
