@@ -1,0 +1,19 @@
+// labelUtils.ts
+
+// Define an interface or type for the labels and codes
+export interface LabelMapping {
+  [code: string]: string;
+}
+
+// Create a mapping object
+export const labelMapping: LabelMapping = {
+  'code1': 'Label 1',
+  'code2': 'Label 2',
+  'code3': 'Label 3',
+  // Add more mappings as needed
+};
+
+// Write a function that maps labels by code
+export const getLabelByCode = (code: string): string => {
+  return labelMapping[code] || 'Unknown Label';
+};
