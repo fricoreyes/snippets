@@ -1,0 +1,200 @@
+import React, { useState } from 'react';
+import CreatableSelect from 'react-select/creatable';
+
+const MultiSelectPage = () => {
+  // Initial options for the select
+  const [options, setOptions] = useState([
+    { value: 'chocolate', label: 'Chocolate', url: 'https://example.com/flavors/chocolate' },
+    { value: 'strawberry', label: 'Strawberry', url: 'https://example.com/flavors/strawberry' },
+    { value: 'vanilla', label: 'Vanilla', url: 'https://example.com/flavors/vanilla' }
+  ]);
+  
+  // State to track the selected value(s) - now an array for multiselect
+  const [selectedOptions, setSelectedOptions] = useState([]);
+  
+  // Handle creation of a new option
+  const handleCreate = (inputValue) => {
+    const newValue = inputValue.toLowerCase();
+    const newOption = { 
+      value: newValue, 
+      label: inputValue,
+      url: `https://example.com/flavors/${newValue}`
+    };
+    setOptions([...options, newOption]);
+    setSelectedOptions([...selectedOptions, newOption]);
+  };
+  
+  // Handle change in selection
+  const handleChange = (newValue) => {
+    setSelectedOptions(newValue || []);
+  };
+  
+  // Custom components for react-select
+  const MultiValueLabel = props => {
+    return (
+      <div
+        onClick={() => window.open(props.data.url, '_blank')}
+        style={{
+          fontWeight: 'bold',
+          padding: '2px 6px',
+          cursor: 'pointer'
+        }}
+        title={`Visit ${props.data.url}`}
+      >
+        {props.children}
+      </div>
+    );
+  };
+  
+  return (
+    <div style={{ padding: '20px', maxWidth: '500px', margin: '0 auto' }}>
+      <h2>React-Select Creatable Multiselect Example</h2>
+      <p>Select multiple flavors or type new ones to add them</p>
+      <p><small>Click on a pill label to visit its link</small></p>
+      
+      <CreatableSelect
+        isMulti
+        isClearable
+        onChange={handleChange}
+        onCreateOption={handleCreate}
+        options={options}
+        value={selectedOptions}
+        placeholder="Select or create flavors..."
+        components={{
+          MultiValueLabel
+        }}
+        styles={{
+          multiValue: (base, state) => {
+            // Calculate a color based on the option's value
+            const colorMap = {
+              'chocolate': '#E3F2FD', // Light blue
+              'strawberry': '#BBDEFB', // Lighter blue
+              'vanilla': '#90CAF9'     // Medium light blue
+            };
+            
+            // Get the option's value
+            const value = state.data.value.toLowerCase();
+            
+            // Use color mapping or generate a color based on the first character
+            const backgroundColor = colorMap[value] || 
+              `hsl(${210 + (value.charCodeAt(0) % 30)}, 70%, ${75 + (value.charCodeAt(0) % 15)}%)`;
+              
+            return {
+              ...base,
+              backgroundColor,
+              borderRadius: '16px',
+              padding: '2px 0px 2px 6px',
+              boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+              transition: 'all 0.2s ease'
+            };
+          },
+          multiValueLabel: (base, state) => {
+            // Get the option's value
+            const value = state.data.value.toLowerCase();
+            
+            // Use color mapping or generate color
+            const colorMap = {
+              'chocolate': '#E3F2FD', // Light blue
+              'strawberry': '#BBDEFB', // Lighter blue
+              'vanilla': '#90CAF9'     // Medium light blue
+            };
+            
+            const backgroundColor = colorMap[value] || 
+              `hsl(${value.charCodeAt(0) % 360}, 70%, 85%)`;
+              
+            // Calculate text color (darker for light backgrounds, white for dark ones)
+            const colorSum = backgroundColor.startsWith('#') 
+              ? parseInt(backgroundColor.substr(1, 2), 16) + 
+                parseInt(backgroundColor.substr(3, 2), 16) + 
+                parseInt(backgroundColor.substr(5, 2), 16)
+              : 550; // Default for HSL
+            
+            const color = colorSum > 500 ? '#333' : '#fff';
+            
+            return {
+              ...base,
+              color,
+              cursor: 'pointer',
+              ':hover': {
+                textDecoration: 'underline'
+              }
+            };
+          },
+          multiValueRemove: (base, state) => {
+            // Get the option's value
+            const value = state.data.value.toLowerCase();
+            
+            // Use color mapping or generate color
+            const colorMap = {
+              'chocolate': '#E3F2FD', // Light blue
+              'strawberry': '#BBDEFB', // Lighter blue
+              'vanilla': '#90CAF9'     // Medium light blue
+            };
+            
+            const backgroundColor = colorMap[value] || 
+              `hsl(${value.charCodeAt(0) % 360}, 70%, 85%)`;
+              
+            // Calculate text color (darker for light backgrounds, white for dark ones)
+            const colorSum = backgroundColor.startsWith('#') 
+              ? parseInt(backgroundColor.substr(1, 2), 16) + 
+                parseInt(backgroundColor.substr(3, 2), 16) + 
+                parseInt(backgroundColor.substr(5, 2), 16)
+              : 550; // Default for HSL
+            
+            const color = colorSum > 500 ? '#333' : '#fff';
+            
+            return {
+              ...base,
+              color,
+              backgroundColor: 'transparent',
+              ':hover': {
+                backgroundColor: 'rgba(0,0,0,0.1)',
+                color: colorSum > 500 ? '#000' : '#fff'
+              },
+              borderRadius: '50%',
+              padding: '0 4px',
+            };
+          }
+        }}
+      />
+      
+      {selectedOptions.length > 0 && (
+        <div style={{ marginTop: '20px' }}>
+          <h3>You selected:</h3>
+          <ul>
+            {selectedOptions.map(option => (
+              <li key={option.value}>
+                <a 
+                  href={option.url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  style={{ 
+                    color: '#0077cc', 
+                    textDecoration: 'none',
+                    fontWeight: '500',
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseOver={(e) => e.target.style.textDecoration = 'underline'}
+                  onMouseOut={(e) => e.target.style.textDecoration = 'none'}
+                >
+                  {option.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+      
+      <div style={{ marginTop: '20px' }}>
+        <h3>Available options:</h3>
+        <ul>
+          {options.map(option => (
+            <li key={option.value}>{option.label}</li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  );
+};
+
+export default MultiSelectPage;
