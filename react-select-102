@@ -1,0 +1,136 @@
+import React, { useState } from 'react';
+import { MultiValue, MultiValueProps, components, ActionMeta } from 'react-select';
+import CreatableSelect from 'react-select/creatable';
+
+// Define the option type
+interface Option {
+  readonly label: string;
+  readonly value: string;
+  readonly link?: string;
+}
+
+// Define props for our component
+interface CreatableSelectDemoProps {
+  defaultOptions?: Option[];
+  placeholder?: string;
+  isClearable?: boolean;
+  isMulti?: boolean;
+  enableLinks?: boolean;
+  linkPrefix?: string;
+  onPillClick?: (option: Option) => void;
+}
+
+const CreatableSelectDemo: React.FC<CreatableSelectDemoProps> = ({
+  defaultOptions = [],
+  placeholder = 'Select or create an option...',
+  isClearable = true,
+  isMulti = false,
+  enableLinks = true,
+  linkPrefix = 'https://example.com/tags/',
+  onPillClick,
+}) => {
+  // State to hold the selected option(s)
+  const [selectedOption, setSelectedOption] = useState<Option | MultiValue<Option> | null>(null);
+  
+  // State to hold all available options (including created ones)
+  const [options, setOptions] = useState<Option[]>(defaultOptions);
+
+  // Custom MultiValue component that makes pills clickable with links
+  const CustomMultiValue = (props: MultiValueProps<Option>) => {
+    const { data } = props;
+    
+    // Skip link handling if linking is disabled
+    if (!enableLinks && !onPillClick) {
+      return <components.MultiValue {...props}>{props.children}</components.MultiValue>;
+    }
+    
+    const link = data.link || `${linkPrefix}${data.value}`;
+    
+    const handlePillClick = (e: React.MouseEvent) => {
+      e.stopPropagation(); // Prevent select menu from opening
+      
+      if (onPillClick) {
+        // If custom click handler is provided, use it
+        onPillClick(data);
+      } else if (enableLinks) {
+        // Otherwise open the link if links are enabled
+        window.open(link, '_blank');
+      }
+    };
+    
+    return (
+      <components.MultiValue {...props}>
+        <div 
+          onClick={handlePillClick} 
+          style={{ cursor: enableLinks || onPillClick ? 'pointer' : 'default' }}
+          title={enableLinks ? link : undefined}
+        >
+          {props.children}
+        </div>
+      </components.MultiValue>
+    );
+  };
+
+  // Handle creation of a new option
+  const handleCreate = (inputValue: string) => {
+    const newValue = inputValue.toLowerCase().replace(/\W/g, '-');
+    const newOption: Option = {
+      label: inputValue,
+      value: newValue,
+      ...(enableLinks && { link: `${linkPrefix}${newValue}` }),
+    };
+    
+    setOptions((prev) => [...prev, newOption]);
+    
+    // If multi-select, add to existing selections
+    if (isMulti) {
+      setSelectedOption(
+        selectedOption ? [...(selectedOption as MultiValue<Option>), newOption] : [newOption]
+      );
+    } else {
+      setSelectedOption(newOption);
+    }
+  };
+
+  // Handle change in selection with proper typing
+  const handleChange = (
+    newValue: MultiValue<Option> | Option | null,
+    actionMeta: ActionMeta<Option>
+  ) => {
+    console.log('Action:', actionMeta.action);
+    setSelectedOption(newValue);
+  };
+
+  return (
+    <div>
+      <h2>CreatableSelect Demo</h2>
+      
+      <CreatableSelect
+        isClearable={isClearable}
+        isMulti={isMulti}
+        onChange={handleChange}
+        onCreateOption={handleCreate}
+        options={options}
+        value={selectedOption}
+        placeholder={placeholder}
+        components={enableLinks || onPillClick ? { MultiValue: CustomMultiValue } : undefined}
+      />
+      
+      <div style={{ marginTop: '20px' }}>
+        <h3>Current Selection:</h3>
+        <pre>
+          {JSON.stringify(selectedOption, null, 2)}
+        </pre>
+      </div>
+      
+      <div style={{ marginTop: '20px' }}>
+        <h3>All Available Options:</h3>
+        <pre>
+          {JSON.stringify(options, null, 2)}
+        </pre>
+      </div>
+    </div>
+  );
+};
+
+export default CreatableSelectDemo;
